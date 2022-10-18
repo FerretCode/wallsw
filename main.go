@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,7 +41,7 @@ func catalog(dir string, startAt int) {
 		log.Fatal("There was an error fetching wallpapers from that path!")
 	}
 
-	for i, file := range entries[startAt:] {
+	for _, file := range entries[startAt:] {
 		if file.IsDir() {
 			continue
 		}
@@ -50,8 +50,7 @@ func catalog(dir string, startAt int) {
 
 		s.Start()
 
-		s.Suffix = fmt.Sprintf(" Switching wallpaper to number %s...", strconv.Itoa(i + startAt))
-		s.FinalMSG = "The wallpaper was switched.\n"
+		s.Suffix = fmt.Sprintf(" Switching wallpaper to %s...", file.Name())
 
 		home, err := os.UserHomeDir()
 
@@ -96,5 +95,51 @@ func catalog(dir string, startAt int) {
 }
 
 func randomWallpaper(dir string) {
+	entries, err := os.ReadDir(dir)
 
+	if err != nil {
+		log.Fatal("There was an error fetching wallpapers from that path!")						
+	}
+
+	wallpaper := getWallpaper(entries)
+
+	s := spinner.New(spinner.CharSets[43], 100 * time.Millisecond)
+
+	s.Start()
+
+	s.Suffix = fmt.Sprintf(" Randomizing wallpaper...")
+	s.FinalMSG = fmt.Sprintf("Wallpaper randomized to %s.\n", wallpaper.Name())
+
+	home, err := os.UserHomeDir()
+
+	if err != nil {
+		log.Fatal("could not find your home directory!")
+	}
+
+	cmd := exec.Command(
+		"python3",
+		fmt.Sprintf("%s/wallpaper/switch.py", home),
+		fmt.Sprintf("%s/%s", dir, wallpaper.Name()),
+	)
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal("There was an error randomizing the wallpaper!")
+	}
+
+	if waitErr := cmd.Wait(); waitErr != nil {
+		log.Fatal("There was an error switching the wallpaper!")
+	}
+
+	s.Stop()
+}
+
+func getWallpaper(entries []os.DirEntry) os.DirEntry {
+	rand.Seed(time.Now().UnixNano())
+	wallpaper := entries[rand.Intn(len(entries))]	
+
+	if wallpaper.IsDir() {
+		wallpaper = getWallpaper(entries)
+	}
+
+	return wallpaper
 }
