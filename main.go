@@ -19,6 +19,7 @@ func main() {
 
 	directory := parser.String("d", "directory", &argparse.Options{Required: true, Help: "The directory to look for wallpapers in"})
 	startAt := parser.Int("", "start-at", &argparse.Options{Required: false, Help: "The number of files into the directory to start at"})
+	filter := parser.String("f", "filter", &argparse.Options{Required: false, Help: "A string to filter files by"})
 	random := parser.Flag("", "random", &argparse.Options{Required: false, Help: "Should it fetch a random wallpaper?"})
 
 	if err := parser.Parse(os.Args); err != nil {
@@ -26,20 +27,30 @@ func main() {
 	}
 
 	if *random == false {
-		catalog(*directory, *startAt)	
+		catalog(*directory, *startAt, *filter)	
 
 		return
 	}
 
-	randomWallpaper(*directory) 
+	randomWallpaper(*directory, *filter) 
 }
 
-func catalog(dir string, startAt int) {
+func catalog(dir string, startAt int, filter string) {
 	entries, err := os.ReadDir(dir)
 
 	if err != nil {
 		log.Fatal("There was an error fetching wallpapers from that path!")
 	}
+
+	n := 0
+	for _, file := range entries {
+		if strings.Contains(file.Name(), filter) {
+			entries[n] = file
+			n++
+		}
+	}
+
+	entries = entries[:n]
 
 	for _, file := range entries[startAt:] {
 		if file.IsDir() {
@@ -94,8 +105,18 @@ func catalog(dir string, startAt int) {
 	}
 }
 
-func randomWallpaper(dir string) {
+func randomWallpaper(dir string, filter string) {
 	entries, err := os.ReadDir(dir)
+
+	n := 0
+	for _, file := range entries {
+		if strings.Contains(file.Name(), filter) {
+			entries[n] = file	
+			n++
+		}
+	}
+
+	entries = entries[:n]
 
 	if err != nil {
 		log.Fatal("There was an error fetching wallpapers from that path!")						
