@@ -69,10 +69,14 @@ func catalog(dir string, startAt int, filter string) {
 			log.Fatal("Could not find your home directory!")
 		}
 
+		name := strings.ReplaceAll(file.Name(), " ", "\\ ")
+
+		fmt.Println(name)
+
 		cmd := exec.Command(
 			"python3", 
 			fmt.Sprintf("%s/wallpaper/switch.py", home),
-			fmt.Sprintf("%s/%s", dir, file.Name(),
+			fmt.Sprintf("%s/%s", dir, name, 
 		))
 
 		if err := cmd.Start(); err != nil {
@@ -137,10 +141,12 @@ func randomWallpaper(dir string, filter string) {
 		log.Fatal("could not find your home directory!")
 	}
 
+	name := strings.ReplaceAll(wallpaper.Name(), " ", "\\ ")
+
 	cmd := exec.Command(
 		"python3",
 		fmt.Sprintf("%s/wallpaper/switch.py", home),
-		fmt.Sprintf("%s/%s", dir, wallpaper.Name()),
+		fmt.Sprintf("%s/%s", dir, name),
 	)
 
 	if err := cmd.Start(); err != nil {
