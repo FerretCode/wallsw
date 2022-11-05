@@ -61,7 +61,9 @@ func catalog(dir string, startAt int, filter string) {
 
 		s.Start()
 
-		s.Suffix = fmt.Sprintf(" Switching wallpaper to %s...", file.Name())
+		name := strings.ReplaceAll(file.Name(), " ", "\\ ")
+
+		s.Suffix = fmt.Sprintf(" Switching wallpaper to %s...", name)
 
 		home, err := os.UserHomeDir()
 
@@ -69,18 +71,30 @@ func catalog(dir string, startAt int, filter string) {
 			log.Fatal("Could not find your home directory!")
 		}
 
-		name := strings.ReplaceAll(file.Name(), " ", "\\ ")
-
 		fmt.Println(name)
+
+		fmt.Printf(
+			"python3 %s/wallpaper/switch.py %s/%s\n", home, dir, name,
+		)
 
 		cmd := exec.Command(
 			"python3", 
 			fmt.Sprintf("%s/wallpaper/switch.py", home),
-			fmt.Sprintf("%s/%s", dir, name, 
+			fmt.Sprintf(`%s/"%s"`, dir, name, 
 		))
+
+
+		stdout, _ := cmd.StdoutPipe()
 
 		if err := cmd.Start(); err != nil {
 			log.Fatal(err)
+		}
+
+		scanner := bufio.NewScanner(stdout)
+		scanner.Split(bufio.ScanWords)
+		for scanner.Scan() {
+			m := scanner.Text()
+			fmt.Println(m)
 		}
 
 		if waitErr := cmd.Wait(); waitErr != nil {
@@ -170,4 +184,3 @@ func getWallpaper(entries []os.DirEntry) os.DirEntry {
 
 	return wallpaper
 }
-
