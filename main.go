@@ -128,7 +128,7 @@ func randomWallpaper(dir string, filter string) {
 
 	wallpaper := getWallpaper(entries)
 
-	s := spinner.New(spinner.CharSets[43], 100 * time.Millisecond)
+	s := spinner.New(spinner.CharSets[27], 100 * time.Millisecond)
 
 	s.Start()
 
